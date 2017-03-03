@@ -1,0 +1,41 @@
+Rails:
+  Enabled: true
+
+AllCops:
+  Exclude:
+    - 'lib/tasks/**/*'
+
+Documentation:
+  Enabled: false
+
+Lint/UnusedMethodArgument:
+  Enabled: false
+
+Metrics/AbcSize:
+  Max: 30
+
+Metrics/BlockLength:
+  Exclude:
+    - 'lib/tasks/**/*'
+
+Metrics/CyclomaticComplexity:
+  Max: 10
+
+Metrics/MethodLength:
+  Max: 30
+
+Metrics/PerceivedComplexity:
+  Max: 10
+
+Metrics/LineLength:
+  Max: 120
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+  # EnforcedStyle: compact
+  # SupportedStyles:
+  #   - nested
+  #   - compact
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
