@@ -25,7 +25,7 @@ module Elcinema
 
       def exctact_movie(row)
         img    = row.css('a img').first['src']
-        title  = row.css('li h3 a').first.content
+        title  = row.css('li h3 a').first.content.gsub(/^[\\n\s]*|[\\n\s]*$/, '')
         actors = row.css('li ul.list-separator a').map(&:content).join(', ')
         plot   = row.css('li p.no-margin').first.children.reject { |x| x.name == 'a' }.map(&:content).join
         times  = row.css('div.text-center li strong').map { |x| x.content[0..-2] }
