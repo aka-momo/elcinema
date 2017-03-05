@@ -10,7 +10,7 @@ module Elcinema
       attr_accessor :document, :title
 
       BASE_URL = 'http://www.elcinema.com/en/now/eg'.freeze
-      OMDB_URL = 'http://www.omdbapi.com/?t='.freeze
+      OMDB_URL = 'http://www.omdbapi.com/?y=2017&t='.freeze
 
       ## Methods
       def titles
