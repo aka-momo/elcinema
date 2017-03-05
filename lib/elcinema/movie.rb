@@ -19,7 +19,8 @@ module Elcinema
 
     def self.trending
       movie_scrapper = Elcinema::Scrapper::Movie.new
-      movie_scrapper.titles.map { |t| details(t) }
+      movies = movie_scrapper.titles.map { |t| details(t) }
+      movies.reject(&:invalid)
     end
 
     def update_from_omdb
@@ -45,11 +46,11 @@ module Elcinema
     def clean_null_params
       instance_variables.each do |v|
         var = send(v[1..-1])
-        case var.class
+        case var
         when String
           send("#{v[1..-1]}=", nil) if var == 'N/A'
         when Array
-          send("#{v[1..-1]}=", nil) if var.first == 'N/A'
+          send("#{v[1..-1]}=", []) if var.first == 'N/A'
         end
       end
     end
