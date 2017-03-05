@@ -15,8 +15,8 @@ module Elcinema
       theater = find(id)
       theater.movies.each(&:update_from_omdb)
       theater.movies.reject(&:invalid)
-      rescue
-        nil
+    rescue
+      nil
     end
   end
 end
