@@ -6,5 +6,4 @@ require 'elcinema/scrapper'
 require 'elcinema/scrapper/theater'
 
 module Elcinema
-
 end
