@@ -5,7 +5,7 @@ module Elcinema
 
     ## Methods
     def self.find(id)
-      scrapper = Scrapper::Theater.new(id: id)
+      scrapper = Elcinema::Scrapper::Theater.new(id: id)
       scrapper.execute
     rescue => _
       nil
