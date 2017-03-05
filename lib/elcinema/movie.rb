@@ -14,7 +14,6 @@ module Elcinema
     def self.details(target_title)
       movie = Elcinema::Movie.new(title: target_title)
       movie.update_from_omdb
-      movie.clean_null_params
       movie
     end
 
@@ -33,9 +32,9 @@ module Elcinema
       @actors    = omdb_data['Actors'].split(', ')
       @director  = omdb_data['Director']
       @plot      = omdb_data['Plot']
-      @awards    = omdb_data['Awards'].split(', ')
+      @awards    = omdb_data['Awards']
       @image_url = omdb_data['Poster']
-      @rating = omdb_data['imdbRating']
+      @rating    = omdb_data['imdbRating']
       clean_null_params
     rescue
       @invalid = true
