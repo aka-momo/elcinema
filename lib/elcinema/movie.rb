@@ -17,17 +17,23 @@ module Elcinema
       movie
     end
 
+    def self.trending
+      movie_scrapper = Elcinema::Scrapper::Movie.new
+      movie_scrapper.titles.map { |t| details(t) }
+    end
+
     def update_from_omdb
       movie_scrapper = Elcinema::Scrapper::Movie.new(title: title)
-      omdb_data = movie_scrapper.omdb
-      @title    = title
-      @year     = omdb_data['Year']
-      @runtime  = omdb_data['Runtime']
-      @genre    = omdb_data['Genre'].split(', ')
-      @actors   = omdb_data['Actors'].split(', ')
-      @director = omdb_data['Director']
-      @plot     = omdb_data['Plot']
-      @awards   = omdb_data['Awards'].split(', ')
+      omdb_data  = movie_scrapper.omdb
+      @title     = title
+      @year      = omdb_data['Year']
+      @runtime   = omdb_data['Runtime']
+      @genre     = omdb_data['Genre'].split(', ')
+      @actors    = omdb_data['Actors'].split(', ')
+      @director  = omdb_data['Director']
+      @plot      = omdb_data['Plot']
+      @awards    = omdb_data['Awards'].split(', ')
+      @image_url = omdb_data['Poster']
     rescue
       @invalid = true
     end
