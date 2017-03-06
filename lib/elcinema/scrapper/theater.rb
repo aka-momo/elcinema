@@ -16,14 +16,14 @@ module Elcinema
         theater_location = @document.css('ul.unstyled.no-margin li').first.content.gsub(/^[\\n\s]*|[\\n\s]*$/, '')
         theater = Elcinema::Theater.new(name: theater_name, location: theater_location, movies: [])
         @document.css('div.boxed-0 > div.row')[1..-1].each do |row|
-          theater.movies << exctact_movie(row)
+          theater.movies << extract_movie(row)
         end
         theater
       end
 
       private
 
-      def exctact_movie(row)
+      def extract_movie(row)
         img    = row.css('a img').first['src']
         title  = row.css('li h3 a').first.content.gsub(/^[\\n\s]*|[\\n\s]*$/, '')
         actors = row.css('li ul.list-separator a').map(&:content).join(', ')
