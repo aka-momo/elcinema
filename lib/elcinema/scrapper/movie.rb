@@ -49,13 +49,19 @@ module Elcinema
         end
       end
 
-      def self.omdb_for(title, year: nil)
-        title = title.split(/[\:\()]/).first.strip
-
-        json = open_json(base_url: OMDB_URL, params: { t: title, y: year })
-        json = open_json(base_url: OMDB_URL, params: { t: title, y: year.to_i - 1 }) if json['Response'] == 'False'
-
+      def self.omdb_for(title, year: Time.current.year)
         {}.tap do |movie|
+          title = title.split(/[\:\()]/).first.strip
+
+          json = [0, -1, 1].each do |offset|
+            params = { t: title, y: year.to_i + offset }
+            json = open_json(base_url: OMDB_URL, params: params)
+            next if json['Response'] == 'False'
+
+            movie[:year] = params[:y].to_s
+            break json
+          end
+
           sanitized    = ->(value)     { value && value != 'N/A' }
           parse_number = ->(attr, key) { movie[attr] = (json[key][/\d+/]      if sanitized.call(json[key])) }
           parse_string = ->(attr, key) { movie[attr] = (json[key]             if sanitized.call(json[key])) }
