@@ -53,7 +53,7 @@ module Elcinema
         title = title.split(/[\:\()]/).first.strip
 
         json = open_json(base_url: OMDB_URL, params: { t: title, y: year })
-        return omdb_for(title, year: year.to_i - 1) if json['Response'] == 'False'
+        json = open_json(base_url: OMDB_URL, params: { t: title, y: year.to_i - 1 }) if json['Response'] == 'False'
 
         {}.tap do |movie|
           sanitized    = ->(value)     { value && value != 'N/A' }
