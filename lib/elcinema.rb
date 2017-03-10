@@ -15,10 +15,12 @@ require 'elcinema/movie'
 require 'elcinema/theater'
 
 module Elcinema
-  attr_writer :logger
-
   def self.logger
     @logger ||= Logger.default
+  end
+
+  def self.logger=(logger)
+    @logger = logger
   end
 
   def self.debug
