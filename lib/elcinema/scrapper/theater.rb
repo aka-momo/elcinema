@@ -1,39 +1,57 @@
 module Elcinema
   module Scrapper
-    class Theater < Elcinema::Model
-      ## Extend
-      include Elcinema::Scrapper
-
-      ## Attributes
-      attr_accessor :id, :document
-
-      BASE_URL = 'http://www.elcinema.com/en/theater/'.freeze
-
+    class Theater < Base
       ## Methods
-      def execute
-        prepare_document(path: theater_url(@id))
-        theater_name = @document.css('div.panel.jumbo span.left').first.content
-        theater_location = @document.css('ul.unstyled.no-margin li').first.content.gsub(/^[\\n\s]*|[\\n\s]*$/, '')
-        theater = Elcinema::Theater.new(name: theater_name, location: theater_location, movies: [])
-        @document.css('div.boxed-0 > div.row')[1..-1].each do |row|
-          theater.movies << extract_movie(row)
+      def self.all(with_details: false)
+        page = 1
+
+        [].tap do |theaters|
+          loop do
+            data = load(page: page)
+
+            data[:theaters].each do |theater|
+              theater = find(theater[:id]) if with_details
+              theaters << theater unless theater.nil?
+            end
+
+            break unless data[:has_more]
+
+            page += 1
+          end
         end
-        theater
       end
 
-      private
+      def self.find(id)
+        page = open_html(path: "theater/#{id}")
 
-      def extract_movie(row)
-        img    = row.css('a img').first['src']
-        title  = row.css('li h3 a').first.content.gsub(/^[\\n\s]*|[\\n\s]*$/, '')
-        actors = row.css('li ul.list-separator a').map(&:content).join(', ')
-        plot   = row.css('li p.no-margin').first.children.reject { |x| x.name == 'a' }.map(&:content).join
-        times  = row.css('div.text-center li strong').map { |x| x.content[0..-2] }
-        Elcinema::Movie.new(image_url: img, title: title, actors: actors, plot: plot, times: times)
+        {}.tap do |theater|
+          theater[:id]        = id.to_s
+          theater[:name]      = page.css('.jumbo .left').first.text.strip
+          theater[:image_url] = page.css('.intro-box img').first[:src]
+          theater[:address]   = page.css('ul.unstyled.no-margin li:first-child').first.text.strip
+
+          theater[:movies]    = page.css('#theater-showtimes-container h3 a').map do |elm|
+            {}.tap do |movie|
+              movie[:id]    = elm[:href][/\d+/]
+              movie[:title] = elm.text.strip
+            end
+          end
+        end
       end
 
-      def theater_url(id)
-        BASE_URL + id
+      def self.load(page: 1)
+        page = open_html(path: 'theater/1/1', params: { page: page })
+
+        {}.tap do |data|
+          data[:theaters] = page.css('.jumbo-theater > a:nth-child(2)').map do |elm|
+            {}.tap do |theater|
+              theater[:id]   = elm[:href][/\d+/]
+              theater[:name] = elm.text.strip
+            end
+          end
+
+          data[:has_more] = page.css('.pagination li.current + li:not(.arrow)').any?
+        end
       end
     end
   end

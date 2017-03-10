@@ -6,8 +6,8 @@ require 'elcinema/version'
 Gem::Specification.new do |spec|
   spec.name          = 'elcinema'
   spec.version       = Elcinema::VERSION
-  spec.authors       = ['Mohamed Diaa']
-  spec.email         = ['mohamed.diaa27@gmail.com']
+  spec.authors       = ['Mohamed Diaa', 'Ramy Aboul Naga']
+  spec.email         = ['mohamed.diaa27@gmail.com', 'ramy.naga@gmail.com']
 
   spec.summary       = 'Elcinema is a gem for exploring theaters from elcinema.com'
   spec.homepage      = 'https://github.com/mohameddiaa27/elcinema'
@@ -29,9 +29,11 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
+  spec.add_dependency 'json',     '~> 2.0'
   spec.add_dependency 'nokogiri', '~> 1.7'
 
   spec.add_development_dependency 'bundler', '~> 1.13'
-  spec.add_development_dependency 'rake', '~> 10.0'
-  spec.add_development_dependency 'rspec', '~> 3.0'
+  spec.add_development_dependency 'byebug',  '~> 9.0'
+  spec.add_development_dependency 'rake',    '~> 10.0'
+  spec.add_development_dependency 'rspec',   '~> 3.0'
 end

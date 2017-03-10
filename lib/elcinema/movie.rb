@@ -1,57 +1,38 @@
 module Elcinema
   class Movie < Model
     ## Attributes
-    attr_accessor :image_url, :title, :actors, :plot, :times
-    attr_accessor :awards, :director, :genres, :runtime, :year, :invalid, :rating
+    attr_accessor :id, :theater_id
+    cached_attr   :title, :year,
+                  :trailer_url,
+                  :actors, :awards, :directors, :genres, :plot, :poster_url, :rating, :runtime,
+                  :times,
+                  :theaters,
+                  using: :fetch
 
     ## Methods
-    def self.details_from_theater(theater_id, target_title)
-      Elcinema::Theater.find(theater_id).movies.find { |m| m.title == target_title }
-    rescue
-      nil
+    def self.all
+      Scrapper::Movie.all.map(&method(:new))
     end
 
-    def self.details(target_title)
-      movie = Elcinema::Movie.new(title: target_title)
-      movie.update_from_omdb
-      movie
+    def self.find(id)
+      new(id: id)
     end
 
-    def self.trending
-      movie_scrapper = Elcinema::Scrapper::Movie.new
-      movies = movie_scrapper.titles.map { |t| details(t) }
-      movies.reject(&:invalid)
-    end
-
-    def update_from_omdb
-      movie_scrapper = Elcinema::Scrapper::Movie.new(title: title)
-      omdb_data  = movie_scrapper.omdb
-      @title     = title
-      @year      = omdb_data['Year']
-      @runtime   = omdb_data['Runtime']
-      @genres    = omdb_data['Genre'].split(', ')
-      @actors    = omdb_data['Actors'].split(', ')
-      @director  = omdb_data['Director']
-      @plot      = omdb_data['Plot']
-      @awards    = omdb_data['Awards']
-      @image_url = omdb_data['Poster']
-      @rating    = omdb_data['imdbRating']
-      clean_null_params
-    rescue
-      @invalid = true
-    end
-
-    private
-
-    def clean_null_params
-      instance_variables.each do |v|
-        var = send(v[1..-1])
-        case var
-        when String
-          send("#{v[1..-1]}=", nil) if var == 'N/A'
-        when Array
-          send("#{v[1..-1]}=", []) if var.first == 'N/A'
+    def fetch(attr)
+      case attr
+      when :times
+        Scrapper::Movie.times_for(id).tap do |times|
+          unless theater_id.nil?
+            times = times.find { |t| t[:theater_id] == theater_id }
+            return times[:times] unless times.nil?
+          end
         end
+      when :theaters
+        return [Theater.new(id: theater_id)] unless theater_id.nil?
+        times.map { |time| Theater.new(id: time[:theater_id]) }
+      else
+        attrs = Scrapper::Movie.find(id, with_omdb: true, with_trailer: true)
+        assign_attributes(attrs)[attr]
       end
     end
   end
