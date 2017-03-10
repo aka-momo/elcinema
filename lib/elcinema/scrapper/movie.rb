@@ -56,11 +56,11 @@ module Elcinema
           json = [0, -1, 1].inject({}) do |_, offset|
             params = { t: title, y: year.to_i + offset }
             json = open_json(base_url: OMDB_URL, params: params)
-            next if json['Response'] == 'False'
+            next {} if json['Response'] == 'False'
 
             movie[:year] = params[:y].to_s
             break json
-          end || {}
+          end
 
           sanitized    = ->(value)     { value && value != 'N/A' }
           parse_number = ->(attr, key) { movie[attr] = (json[key][/\d+/]      if sanitized.call(json[key])) }
