@@ -5,6 +5,7 @@ require 'json'
 module Elcinema
   module Scrapper
     class Base
+      TRIALS   = 3
       BASE_URL = 'http://www.elcinema.com/en'.freeze
 
       def self.open_html(base_url: BASE_URL, path: '', params: {})
@@ -27,9 +28,19 @@ module Elcinema
         url
       end
 
-      def self.open_url(url)
-        Elcinema.logger.debug { "Fetching: #{url}" }
-        open(url)
+      def self.open_url(url, trials: TRIALS, delay: 1, silent: false)
+        state = 'Fetching'
+        trials.downto(1) do |n|
+          begin
+            Elcinema.logger.debug { "#{state}: #{url}" }
+            return open(url)
+          rescue Errno::ECONNRESET, Errno::ECONNREFUSED => e
+            fail e unless silent || n > 1
+
+            state = "Retry ##{TRIALS + 1 - n}"
+            sleep delay
+          end
+        end
       end
     end
   end
