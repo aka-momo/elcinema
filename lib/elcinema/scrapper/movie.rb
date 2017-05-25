@@ -58,7 +58,7 @@ module Elcinema
           json = [0, -1, 1].inject({}) do |_, offset|
             params = { api_key: api_key, query: title, year: year.to_i + offset }
             json = open_json(base_url: META_URL, path: 'search/movie', params: params)
-            next {} if json['total_results'] == '0'
+            next {} if json['total_results'] == 0
 
             movie_id = json['results'].first['id']
             params = { api_key: api_key, append_to_response: 'credits' }
@@ -67,6 +67,8 @@ module Elcinema
             movie[:year] = (year.to_i + offset).to_s
             break json
           end
+
+          return if json.empty?
 
           sanitized    = ->(value)     { value && value != 'N/A' }
           parse_number = ->(attr, key) { movie[attr] = (json[key][/\d+/]      if sanitized.call(json[key])) }
