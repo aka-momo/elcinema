@@ -2,7 +2,7 @@ module Elcinema
   module Scrapper
     class Movie < Base
       ## Constants
-      OMDB_URL = 'http://www.omdbapi.com/'.freeze
+      META_URL = 'https://api.themoviedb.org/3'.freeze
       AN_HOUR  = 3_600
 
       ## Methods
@@ -14,7 +14,7 @@ module Elcinema
             data = load(page: page)
 
             data[:movies].each do |movie|
-              movie = find(movie[:id], with_omdb: true, with_trailer: true, with_times: true) if with_details
+              movie = find(movie[:id], with_meta: true, with_trailer: true, with_times: true) if with_details
               movies << movie unless movie.nil?
             end
 
@@ -25,7 +25,7 @@ module Elcinema
         end
       end
 
-      def self.find(id, with_omdb: false, with_trailer: false, with_times: false)
+      def self.find(id, with_meta: false, with_trailer: false, with_times: false)
         page = open_html(path: "work/#{id}")
 
         {}.tap do |movie|
@@ -33,9 +33,9 @@ module Elcinema
           movie[:title] = page.css('.jumbo .left').first.text.strip
           movie[:year]  = page.css('.jumbo .left').last.text[/\d+/]
 
-          if with_omdb
-            omdb = omdb_for(movie[:title], year: movie[:year])
-            movie.merge!(omdb) unless omdb.nil?
+          if with_meta
+            meta = meta_for(movie[:title], year: movie[:year])
+            movie.merge!(meta) unless meta.nil?
           end
 
           trailer_id = page.css('.large-3 .blue').first
@@ -49,16 +49,22 @@ module Elcinema
         end
       end
 
-      def self.omdb_for(title, year: Time.current.year)
+      def self.meta_for(title, year: Time.current.year)
+        api_key = ENV.fetch('TMDB_API_KEY') { return {} }
+
         {}.tap do |movie|
           title = title.split(/[\:\()]/).first.strip
 
           json = [0, -1, 1].inject({}) do |_, offset|
-            params = { t: title, y: year.to_i + offset }
-            json = open_json(base_url: OMDB_URL, params: params)
-            next {} if json['Response'] == 'False'
+            params = { api_key: api_key, query: title, year: year.to_i + offset }
+            json = open_json(base_url: META_URL, path: 'search/movie', params: params)
+            next {} if json['total_results'] == '0'
 
-            movie[:year] = params[:y].to_s
+            movie_id = json['results'].first['id']
+            params = { api_key: api_key, append_to_response: 'credits' }
+            json = open_json(base_url: META_URL, path: "movie/#{movie_id}", params: params)
+
+            movie[:year] = (year.to_i + offset).to_s
             break json
           end
 
@@ -67,14 +73,14 @@ module Elcinema
           parse_string = ->(attr, key) { movie[attr] = (json[key]             if sanitized.call(json[key])) }
           parse_array  = ->(attr, key) { movie[attr] = (json[key].split(', ') if sanitized.call(json[key])) }
 
-          { runtime:    'Runtime' }.each(&parse_number)
-          { awards:     'Awards',
-            plot:       'Plot',
-            poster_url: 'Poster',
-            rating:     'imdbRating' }.each(&parse_string)
-          { actors:     'Actors',
-            directors:  'Director',
-            genres:     'Genre' }.each(&parse_array)
+          movie['poster_url'] = "https://image.tmdb.org/t/p/w780#{json['poster_path']}"
+          movie['actors']     = json['credits']['cast'].take(3).map { |c| c['name'] }
+          movie['directors']  = json['credits']['crew'].select { |c| c['job'] == 'Director' }.take(3).map { |c| c['name'] }
+          movie['genres']     = json['genres'].take(3).map { |c| c['name'] }
+
+          { runtime:    'runtime',
+            plot:       'overview',
+            rating:     'vote_average' }.each(&parse_string)
         end
       end
 

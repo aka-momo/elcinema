@@ -31,7 +31,7 @@ module Elcinema
         return [Theater.new(id: theater_id)] unless theater_id.nil?
         times.map { |time| Theater.new(id: time[:theater_id]) }
       else
-        attrs = Scrapper::Movie.find(id, with_omdb: true, with_trailer: true)
+        attrs = Scrapper::Movie.find(id, with_meta: true, with_trailer: true)
         assign_attributes(attrs)[attr]
       end
     end
