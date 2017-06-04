@@ -8,32 +8,36 @@ module Elcinema
                       theaters)
 
     ## Attributes
-    attr_accessor :id, :theater_id
+    attr_accessor :provider, :id, :theater_id
     cached_attr   *CACHED_ATTRS, using: :fetch
 
     ## Methods
-    def self.all
-      Scrapper::Movie.all.map(&method(:new))
+    def self.s(provider)
+      eval("Scrapper::#{provider}::Movie")
     end
 
-    def self.find(id)
-      new(id: id)
+    def self.all(provider:)
+      s(provider).all.map { |attr| new(attr.merge(provider: provider)) }
+    end
+
+    def self.find(id, provider:)
+      new(provider: provider, id: id)
     end
 
     def fetch(attr)
       case attr
       when :times
-        Scrapper::Movie.times_for(id).tap do |times|
+        self.class.s(provider).times_for(id).tap do |times|
           unless theater_id.nil?
             times = times.find { |t| t[:theater_id] == theater_id }
             return times[:times] unless times.nil?
           end
         end
       when :theaters
-        return [Theater.new(id: theater_id)] unless theater_id.nil?
-        times.map { |time| Theater.new(id: time[:theater_id]) }
+        return [Theater.new(provider: provider, id: theater_id)] unless theater_id.nil?
+        times.map { |time| Theater.new(provider: provider, id: time[:theater_id]) }
       else
-        attrs = Scrapper::Movie.find(id, with_meta: true, with_trailer: true)
+        attrs = self.class.s(provider).find(id, with_meta: true, with_trailer: true)
         attrs = CACHED_ATTRS.zip([] * CACHED_ATTRS.size).to_h
                             .reject { |k, _| %i(times theaters).include?(k) }
                             .merge(attrs)

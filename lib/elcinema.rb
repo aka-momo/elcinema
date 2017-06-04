@@ -8,7 +8,9 @@ require 'logger'
 
 require 'elcinema/version'
 require 'elcinema/logger'
+
 require 'elcinema/lib/cached_attr'
+
 require 'elcinema/scrapper'
 require 'elcinema/model'
 require 'elcinema/movie'

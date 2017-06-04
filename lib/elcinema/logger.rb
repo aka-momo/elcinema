@@ -1,5 +1,6 @@
 module Elcinema
   class Logger < ::Logger
+    ## Methods
     def self.default
       @logger ||= begin
         new(STDOUT).tap do |logger|

@@ -5,20 +5,22 @@ require 'json'
 module Elcinema
   module Scrapper
     class Base
+      AN_HOUR  = 3_600
+      META_URL = 'https://api.themoviedb.org/3'.freeze
       TRIALS   = 3
-      BASE_URL = 'http://www.elcinema.com/en'.freeze
 
-      def self.open_html(base_url: BASE_URL, path: '', params: {})
-        url = prepare_url(base_url: base_url, path: path, params: params)
+      ## Methods
+      def self.open_html(base_url = self.base_url, path: '', params: {})
+        url = prepare_url(base_url, path: path, params: params)
         Nokogiri::HTML(open_url(url))
       end
 
-      def self.open_json(base_url: BASE_URL, path: '', params: {})
-        url = prepare_url(base_url: base_url, path: path, params: params)
+      def self.open_json(base_url = self.base_url, path: '', params: {})
+        url = prepare_url(base_url, path: path, params: params)
         JSON.parse(open_url(url).read)
       end
 
-      def self.prepare_url(base_url: BASE_URL, path: '', params: {})
+      def self.prepare_url(base_url = self.base_url, path: '', params: {})
         raw_params = params
                      .map { |key, value| "#{key}=#{URI.encode(value.to_s)}" }
                      .join('&')
@@ -32,7 +34,7 @@ module Elcinema
         state = 'Fetching'
         trials.downto(1) do |n|
           begin
-            Elcinema.logger.debug { "#{state}: #{url}" }
+            ::Elcinema.logger.debug { "#{state}: #{url}" }
             return open(url)
           rescue Errno::ECONNRESET, Errno::ECONNREFUSED => e
             fail e unless silent || n > 1
@@ -41,6 +43,12 @@ module Elcinema
             sleep delay
           end
         end
+      end
+
+      protected
+
+      def self.base_url
+        raise NotImplementedError, '.base_url has to be implemented by subclasses'
       end
     end
   end
