@@ -3,7 +3,7 @@ module Elcinema
     ## Constants
     CACHED_ATTRS = %i(title year
                       trailer_url
-                      actors awards directors genres plot poster_url rating runtime
+                      actors awards directors genres plot poster_url rating runtime imdb_id
                       times
                       theaters)
 

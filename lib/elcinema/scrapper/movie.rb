@@ -24,7 +24,7 @@ module Elcinema
         end
       end
 
-      def self.meta_for(title, year: Time.current.year)
+      def self.meta_for(title, year: Time.now.year)
         api_key = ENV.fetch('TMDB_API_KEY') { return {} }
 
         {}.tap do |movie|
@@ -50,10 +50,11 @@ module Elcinema
           parse_string = ->(attr, key) { movie[attr] = (json[key]             if sanitized.call(json[key])) }
           parse_array  = ->(attr, key) { movie[attr] = (json[key].split(', ') if sanitized.call(json[key])) }
 
-          movie['poster_url'] = "https://image.tmdb.org/t/p/w780#{json['poster_path']}"
-          movie['actors']     = json['credits']['cast'].take(3).map { |c| c['name'] }
-          movie['directors']  = json['credits']['crew'].select { |c| c['job'] == 'Director' }.take(3).map { |c| c['name'] }
-          movie['genres']     = json['genres'].take(3).map { |c| c['name'] }
+          movie[:poster_url] = "https://image.tmdb.org/t/p/w780#{json['poster_path']}"
+          movie[:actors]     = json['credits']['cast'].take(3).map { |c| c['name'] }
+          movie[:directors]  = json['credits']['crew'].select { |c| c['job'] == 'Director' }.take(3).map { |c| c['name'] }
+          movie[:genres]     = json['genres'].take(3).map { |c| c['name'] }
+          movie[:imdb_id]    = json['imdb_id']
 
           { runtime:    'runtime',
             plot:       'overview',
